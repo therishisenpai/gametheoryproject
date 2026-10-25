@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09090b">
+  <meta name="description" content="An interactive game-theory demo of strategic pricing competition between cloud resource providers.">
+  <title>Cloud Pricing Lab | Pricing Competition</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Cloud Pricing Lab home">
+        <span class="brand-mark">CP</span>
+        <span><strong>Cloud Pricing Lab</strong><small>GAME THEORY / CLOUD RESOURCE PRICING</small></span>
+      </a>
+      <span class="status-pill"><span class="status-dot"></span>Runs in browser · no cloud API</span>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span>CLOUD RESOURCE ALLOCATION / PROJECT</div>
+          <h1>THREE PROVIDERS.<br><em>COMPETING PRICES.</em></h1>
+          <p>Explore how price, cost, and market conditions affect demand and profit. Adjust the inputs, run the simulation, and compare provider outcomes.</p>
+          <div class="hero-meta"><span>● Best-response dynamics</span><span>● Nash equilibrium</span><span>● Calculated in-browser</span></div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+          <div class="cloud-node node-a"><span>A</span><b>AWS-like</b></div>
+          <div class="cloud-node node-b"><span>Az</span><b>Azure-like</b></div>
+          <div class="cloud-node node-c"><span>G</span><b>GCP-like</b></div>
+          <div class="hub"><div class="hub-core">Σ</div><small>MARKET</small></div>
+          <div class="orbit-dot dot-one"></div><div class="orbit-dot dot-two"></div><div class="orbit-dot dot-three"></div>
+        </div>
+      </section>
+
+      <section class="ticker-strip" aria-label="Simulation principles">
+        <div class="ticker-item"><span class="ticker-index">01</span><div class="ticker-copy"><small>PRICING</small><strong>Providers choose prices</strong></div></div>
+        <div class="ticker-item"><span class="ticker-index">02</span><div class="ticker-copy"><small>DEMAND</small><strong>Demand responds to price</strong></div></div>
+        <div class="ticker-item"><span class="ticker-index">03</span><div class="ticker-copy"><small>SOLUTION</small><strong>Approximate Nash equilibrium</strong></div></div>
+      </section>
+
+      <section class="section-heading">
+        <div><span class="section-kicker">01 / SCENARIO SETUP</span><h2>Set the market rules</h2></div>
+        <button class="button button-quiet" id="resetBtn" type="button">↺ Reset example</button>
+      </section>
+
+      <section class="workspace">
+        <aside class="panel controls-panel">
+          <div class="panel-heading"><div><span class="mini-label">MODEL INPUTS / CONFIGURATION</span><h3>Scenario settings</h3></div><span class="icon-chip">⚙</span></div>
+          <label class="field-label" for="baseDemand">Total market demand <output id="baseDemandValue">2,000</output></label>
+          <input id="baseDemand" class="range" type="range" min="500" max="5000" step="100" value="2000">
+          <div class="range-ends"><span>500 units</span><span>5,000 units</span></div>
+
+          <label class="field-label field-gap" for="sensitivity">Price sensitivity (α) <output id="sensitivityValue">1.20</output></label>
+          <input id="sensitivity" class="range range-purple" type="range" min="0.3" max="3" step="0.05" value="1.2">
+          <div class="range-ends"><span>Less sensitive</span><span>More sensitive</span></div>
+          <p class="help-text">Higher α means customers respond more strongly to price differences.</p>
+
+          <div class="provider-header"><div><span class="mini-label">PROVIDERS</span><h3>Provider list</h3></div><span class="counter" id="providerCount">3 / 6</span></div>
+          <div id="providerEditor" class="provider-editor" aria-live="polite"></div>
+          <button class="button button-outline add-button" id="addProviderBtn" type="button">＋ Add provider</button>
+
+          <div class="model-note"><span class="note-icon">i</span><p><strong>Model settings</strong><br>Each provider searches 200 candidate prices between 0.50 and 10.00. The best-response process starts at 1.5× marginal cost and stops when price changes are below 0.001 or 100 iterations.</p></div>
+          <button class="button button-primary run-button" id="runBtn" type="button"><span>▶</span> Run simulation <span class="button-arrow">↗</span></button>
+          <p class="run-status" id="runStatus" aria-live="polite">Ready to simulate.</p>
+        </aside>
+
+        <div class="results-column">
+          <section class="kpi-grid" aria-label="Simulation summary">
+            <article class="kpi-card"><div class="kpi-top"><span>AVERAGE EQUILIBRIUM PRICE</span><span class="kpi-glyph glyph-blue">↗</span></div><strong id="kpiPrice">3.253</strong><small>Across active providers</small></article>
+            <article class="kpi-card"><div class="kpi-top"><span>TOTAL MODELED DEMAND</span><span class="kpi-glyph glyph-green">◉</span></div><strong id="kpiDemand">2,000</strong><small>Units allocated across players</small></article>
+            <article class="kpi-card"><div class="kpi-top"><span>TOTAL PROFIT</span><span class="kpi-glyph glyph-gold">⌁</span></div><strong id="kpiProfit">2,521</strong><small>Price less marginal cost</small></article>
+            <article class="kpi-card"><div class="kpi-top"><span>ITERATIONS</span><span class="kpi-glyph glyph-purple">⟳</span></div><strong id="kpiIterations">4</strong><small id="convergenceStatus">Converged</small></article>
+          </section>
+
+          <section class="panel table-panel">
+            <div class="panel-heading"><div><span class="mini-label">RESULTS / CURRENT SCENARIO</span><h3>Equilibrium results</h3></div><span class="live-tag"><span></span> CURRENT RUN</span></div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Provider</th><th>Marginal cost</th><th>Equilibrium price</th><th>Demand</th><th>Profit</th></tr></thead>
+              <tbody id="resultsBody"></tbody>
+            </table></div>
+            <div class="table-foot"><span class="foot-dot"></span> Prices are simulated values, not real cloud-provider rates.</div>
+          </section>
+
+          <section class="panel chart-panel">
+            <div class="chart-title-row"><div><span class="mini-label">01 / CONVERGENCE</span><h3>Price convergence</h3><p>Each line shows a provider’s price across best-response iterations.</p></div><span class="chart-badge">Your scenario</span></div>
+            <div class="chart-container"><svg id="convergenceChart" viewBox="0 0 720 300" role="img" aria-label="Line chart of provider prices over best-response iterations"></svg></div>
+            <div id="convergenceLegend" class="legend"></div>
+          </section>
+
+          <section class="charts-grid">
+            <article class="panel chart-panel compact-chart">
+              <div class="chart-title-row"><div><span class="mini-label">02 / COMPETITION</span><h3>Effect of provider count on price</h3><p>Symmetric providers, marginal cost = 2.00.</p></div></div>
+              <div class="chart-container"><svg id="competitionChart" viewBox="0 0 540 290" role="img" aria-label="Line chart of average equilibrium price as the number of competing providers increases"></svg></div>
+              <div class="chart-caption">Reference experiment follows the original Python script: market demand scales with provider count and α = 1.5.</div>
+            </article>
+            <article class="panel chart-panel compact-chart">
+              <div class="chart-title-row"><div><span class="mini-label">03 / PROVIDER OUTCOMES</span><h3>Demand and profit</h3><p>Compare results at the calculated equilibrium.</p></div></div>
+              <div class="chart-container"><svg id="demandProfitChart" viewBox="0 0 540 290" role="img" aria-label="Bar chart comparing each provider's demand and profit"></svg></div>
+              <div class="chart-legend-inline"><span><i class="legend-square demand-square"></i>Demand (units)</span><span><i class="legend-square profit-square"></i>Profit</span></div>
+              <div class="chart-caption">Separate scales are used for demand and profit so both remain readable.</div>
+            </article>
+          </section>
+
+          <section class="panel competition-table-panel">
+            <div class="panel-heading"><div><span class="mini-label">COMPETITION EXPERIMENT</span><h3>Results for 2 to 6 providers</h3></div><span class="chart-badge">2–6 providers</span></div>
+            <div class="table-wrap"><table><thead><tr><th>Providers</th><th>Average price</th><th>Total demand</th><th>Average profit</th><th>Total profit</th></tr></thead><tbody id="competitionBody"></tbody></table></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="section-heading explainer-heading"><div><span class="section-kicker">02 / MODEL OVERVIEW</span><h2>How the model reaches equilibrium</h2></div></section>
+      <section class="explainer-grid">
+        <article class="explain-card"><span class="step-number">01</span><div class="explain-icon">⌘</div><h3>Choose a price</h3><p>Each provider selects a candidate price while treating the other providers' current prices as fixed.</p></article>
+        <article class="explain-card"><span class="step-number">02</span><div class="explain-icon">◉</div><h3>Allocate demand</h3><p>Customers are distributed using a multinomial-logit share based on price sensitivity.</p><div class="equation">sᵢ = e<sup>−αpᵢ</sup> / Σⱼ e<sup>−αpⱼ</sup></div></article>
+        <article class="explain-card"><span class="step-number">03</span><div class="explain-icon">↗</div><h3>Calculate profit</h3><p>A provider earns its per-unit margin multiplied by the demand it receives.</p><div class="equation">πᵢ = (pᵢ − cᵢ) × Dᵢ</div></article>
+        <article class="explain-card"><span class="step-number">04</span><div class="explain-icon">◎</div><h3>Check equilibrium</h3><p>Best responses repeat until prices stop changing materially. This is a grid-based numerical approximation.</p></article>
+      </section>
+
+      <section class="caution-banner"><div class="caution-icon">!</div><div><strong>Know what this model is, and what it is not.</strong><p>AWS-like, Azure-like and GCP-like are illustrative provider labels. The model has no cloud API connection, and it assigns all modeled demand among the active providers. Real markets also involve service quality, switching costs, capacity, contracts, and customer segments that are not represented here.</p></div></section>
+
+      <section class="project-footer">
+        <div><span class="section-kicker">PROJECT DETAILS</span><h2>Strategic Decision-Making in Cloud Resource Allocation</h2><p>Game-theoretic pricing competition model · Undergraduate project demo</p></div>
+        <div class="team-box"><span class="mini-label">GROUP MEMBERS</span><div>Rishi Bhardwaj · Jaskirat Singh</div><div>Kunal Tyagi · Yash Tyagi</div></div>
+      </section>
+    </main>
+    <footer class="footer"><span>CLOUD PRICING LAB / EDUCATIONAL MODEL</span><span>Illustrative providers · No live cloud API</span></footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
